@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Telemetry Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <h1>Sensor Dashboard</h1>
+  <p id="latest">Loading...</p>
+  <canvas id="chart" height="100"></canvas>
+
+  <script>
+    const chart = new Chart(document.getElementById('chart'), {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [
+              { label: 'Temperature (°C)', data: [], yAxisID: 'yTemp' },
+              { label: 'Humidity (%)', data: [], yAxisID: 'yHum' },
+            ],
+        },
+        options: {
+            scales: {
+                 yTemp: { type: 'linear', position: 'left', title: { display: true, text: '°C' } },
+                 yHum: {
+                    type: 'linear',
+                    position: 'right',
+                    title: { display: true, text: '%' },
+                    grid: { drawOnChartArea: false },
+                },
+            },
+        },
+    });
+
+    async function refresh() {
+      try {
+        const res = await fetch('/readings');
+        const rows = (await res.json()).reverse();
+
+        chart.data.labels = rows.map(r => new Date(r.created_at).toLocaleTimeString());
+        chart.data.datasets[0].data = rows.map(r => r.temperature);
+        chart.data.datasets[1].data = rows.map(r => r.humidity);
+        chart.update();
+
+        const last = rows[rows.length - 1];
+        const status = document.getElementById('latest');
+        if (last) {
+            const ageSec = Math.round((Date.now() - new Date(last.created_at).getTime()) / 1000);
+            status.textContent =
+            `Latest: ${last.temperature} °C, ${last.humidity} % (${last.device_id}) — ${ageSec}s ago` +
+            (ageSec > 15 ? ' ⚠ device may be offline' : '');
+        } else {
+            status.textContent = 'No readings yet';
+        }
+      } catch (err) {
+        document.getElementById('latest').textContent = 'Could not reach the API';
+      }
+    }
+
+    refresh();
+    setInterval(refresh, 5000);
+  </script>
+</body>
+</html>
