@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:3000/readings';
+const API_URL = process.env.API_URL || 'http://localhost:3000/readings';
 const API_KEY = process.env.DEVICE_API_KEY;
 const DEVICE_ID = 'sim-device-1';
 

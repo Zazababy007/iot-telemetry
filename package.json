@@ -7,6 +7,9 @@
     "start": "node index.js",
     "device": "node device.js"
   },
+  "engines": {
+  "node": ">=20"
+},
   "keywords": [],
   "author": "",
   "license": "ISC",
